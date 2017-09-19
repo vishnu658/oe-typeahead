@@ -393,7 +393,14 @@
           metaAjax.url = this.dataurl.replace(re, encodeURI(this.value));
           //console.log(metaAjax.url);
           metaAjax.addEventListener('response', function (event) {
-            self._setSelectedItem(event.detail.response);
+            var resp = event.detail.response;
+            if(Array.isArray(resp)){
+              //set the first match from response as value
+              //if the response is empty sets undefined as the value
+              self._setSelectedItem(resp[0]);
+            }else{
+              self._setSelectedItem(resp);
+            }
           });
           metaAjax.addEventListener('error', function (event) { // eslint-disable-line no-unused-vars
             self._setSelectedItem(undefined);
