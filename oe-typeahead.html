@@ -73,21 +73,19 @@
         <iron-dropdown id="dropdown" no-auto-focus opened="{{_suggestions.length}}">
           <paper-material class="dropdown-content">
             <paper-menu id="menu">
-              <template is="dom-repeat" items="{{_suggestions}}" sort="sortData">
-                <paper-item on-mouseover="_onMouseOver" on-tap="_onPaperItemTap" data-item={{item}} data-index={{index}}>
-                  <template is="dom-if" if=[[!isValidTemplate]]>
+              <template is="dom-if" if=[[!hasCustomTemplate]]>
+                <template is="dom-repeat" items="{{_suggestions}}" sort="sortData">
+                  <paper-item on-mouseover="_onMouseOver" on-tap="_select" data-item={{item}}>
                     <span>{{_getDisplayValue(item)}}</span>
-                  </template>
-                  <template is="dom-if" if=[[isValidTemplate]]>
-                    <oe-meta-component metadata-name="{{metadataname}}" template-url="{{templateurl}}" model=[[item]]></oe-meta-component>
-                  </template>
-                </paper-item>
+                  </paper-item>
+                </template>
               </template>
             </paper-menu>
           </paper-material>
         </iron-dropdown>
       </div>
     </div>
+    <content id="itemTemplate" select="template[item-template]"></content>
   </template>
   <script>
     Polymer({
@@ -100,6 +98,20 @@
         'input.blur': '_onBlur',
         'input.change': '_onChange',
         'pt-item-confirmed': 'validate'
+      },
+      ready: function(){
+        this.set('hasCustomTemplate', false);
+        var template = Polymer.dom(this.$.itemTemplate).getDistributedNodes()[0];
+        if(template) {
+          this.dataHost = this;
+          template.content.children[0].setAttribute('on-tap','_select');
+          template.content.children[0].setAttribute('on-mouseover','_onMouseOver');
+          template.content.children[0].setAttribute('data-item','{{item}}');
+          template.content.children[0].setAttribute('disabled','[[readOnly]]');
+          // templatize must be called once before stamp is called
+          this.templatize(template);
+          this.set('hasCustomTemplate', true);
+        }        
       },
       _onBlur: function (e) { // eslint-disable-line no-unused-vars
         if (!this._suggestions) {
@@ -169,10 +181,6 @@
           type: Boolean,
           notify: true
         },
-        templateurl: {
-          type: String,
-          observer: '_templateUrlChanged'
-        },
         strict: {
           type: Boolean,
           value: false
@@ -181,15 +189,12 @@
           type: Boolean,
           notify: true,
           value: false
-        },
-        isValidTemplate: {
-          type: Boolean,
-          value: false
         }
       },
       behaviors: [
         Polymer.PaperInputBehavior,
-        OEUtils.FieldBehavior
+        OEUtils.FieldBehavior,
+        Polymer.Templatizer
       ],
       _onAjaxResponse: function (e) {
         var self = this;
@@ -297,13 +302,13 @@
       _onMouseOver: function (e) {
         var suggestionsMenu = Polymer.dom(this.root).querySelector('paper-menu');
         if (suggestionsMenu && typeof (suggestionsMenu) != 'undefined') {
-          suggestionsMenu.select(e.currentTarget.dataIndex);
+          suggestionsMenu.select(e.model.index);
           this.inputElement.focus();
         }
       },
-      _onPaperItemTap: function (e) {
-        this._setSelectedItem(e.currentTarget.dataItem);
-        this.fire('pt-item-confirmed', e.currentTarget.dataItem);
+      _select: function (e) {
+        this._setSelectedItem(e.model.item);
+        this.fire('pt-item-confirmed', e.model.item);
         this.async(function () {
           this.fire('change');
         });
@@ -411,13 +416,6 @@
         }
         //}, 100);
       },
-      _templateUrlChanged: function (url) {
-        if (url && url.length) {
-          this.set('isValidTemplate', true);
-        } else {
-          this.set('isValidTemplate', false);
-        }
-      },
       _validate: function () {
         var isValid = true;
         if (this.strict && this.displayValue && !this.selectedItem) {
@@ -432,8 +430,23 @@
         }
         return isValid;
       },
-      _suggestionsChanged: function (suggestions) { // eslint-disable-line no-unused-vars
-        if (this._suggestions && this._suggestions.length > 0) {
+      _suggestionsChanged: function (suggestions) {
+          if (this.hasCustomTemplate) {
+            var menu = Polymer.dom(this.$.menu);
+            while (menu.firstChild) {
+              menu.removeChild(menu.firstChild);
+            }
+          }
+        if (suggestions && suggestions.length > 0) {
+          if (this.hasCustomTemplate) {
+            for (var i = 0; i < suggestions.length; i++) {
+              // clone the template and bind with the model
+              var clone = this.stamp({});
+              clone.item = suggestions[i];
+              clone.index = i;
+              menu.appendChild(clone.root);
+            }
+          }
           this.$.dropdown.style.width = this.offsetWidth + 'px';
         }
       },
