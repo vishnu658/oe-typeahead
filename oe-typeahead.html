@@ -73,19 +73,16 @@
         <iron-dropdown id="dropdown" no-auto-focus opened="{{_suggestions.length}}">
           <paper-material class="dropdown-content">
             <paper-menu id="menu">
-              <template is="dom-if" if=[[!hasCustomTemplate]]>
-                <template is="dom-repeat" items="{{_suggestions}}" sort="sortData">
+                <template itemlist id="item-list" is="dom-repeat" items="{{_suggestions}}" sort="sortData">
                   <paper-item on-mouseover="_onMouseOver" on-tap="_select" data-item={{item}}>
                     <span>{{_getDisplayValue(item)}}</span>
                   </paper-item>
-                </template>
               </template>
             </paper-menu>
           </paper-material>
         </iron-dropdown>
       </div>
     </div>
-    <content id="itemTemplate" select="template[item-template]"></content>
   </template>
   <script>
     Polymer({
@@ -100,18 +97,14 @@
         'pt-item-confirmed': 'validate'
       },
       ready: function(){
-        this.set('hasCustomTemplate', false);
-        var template = Polymer.dom(this.$.itemTemplate).getDistributedNodes()[0];
-        if(template) {
-          this.dataHost = this;
-          template.content.children[0].setAttribute('on-tap','_select');
-          template.content.children[0].setAttribute('on-mouseover','_onMouseOver');
-          template.content.children[0].setAttribute('data-item','{{item}}');
-          template.content.children[0].setAttribute('disabled','[[readOnly]]');
-          // templatize must be called once before stamp is called
-          this.templatize(template);
-          this.set('hasCustomTemplate', true);
-        }        
+        if (!this.ctor) {
+          const childTemplate = this.queryEffectiveChildren('template[item-template]');
+          if (childTemplate) {
+            const items = this.$['item-list'];
+            this.templatize(childTemplate);
+            items.templatize(childTemplate);
+          }
+        }
       },
       _onBlur: function (e) { // eslint-disable-line no-unused-vars
         if (!this._suggestions) {
@@ -431,24 +424,7 @@
         return isValid;
       },
       _suggestionsChanged: function (suggestions) {
-          if (this.hasCustomTemplate) {
-            var menu = Polymer.dom(this.$.menu);
-            while (menu.firstChild) {
-              menu.removeChild(menu.firstChild);
-            }
-          }
-        if (suggestions && suggestions.length > 0) {
-          if (this.hasCustomTemplate) {
-            for (var i = 0; i < suggestions.length; i++) {
-              // clone the template and bind with the model
-              var clone = this.stamp({});
-              clone.item = suggestions[i];
-              clone.index = i;
-              menu.appendChild(clone.root);
-            }
-          }
           this.$.dropdown.style.width = this.offsetWidth + 'px';
-        }
       },
 
       /*
