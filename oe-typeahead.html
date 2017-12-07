@@ -73,10 +73,10 @@
         <iron-dropdown id="dropdown" no-auto-focus opened="{{_suggestions.length}}">
           <paper-material class="dropdown-content">
             <paper-menu id="menu">
-                <template itemlist id="item-list" is="dom-repeat" items="{{_suggestions}}" sort="sortData">
-                  <paper-item on-mouseover="onMouseOver" on-tap="onItemSelected" data-item={{item}}>
-                    <span>{{_getDisplayValue(item)}}</span>
-                  </paper-item>
+              <template id="itemlist" is="dom-repeat" items="{{_suggestions}}" sort="sortData">
+                <paper-item on-mouseover="onMouseOver" on-tap="onItemSelected" data-item={{item}}>
+                  <span>{{_getDisplayValue(item)}}</span>
+                </paper-item>
               </template>
             </paper-menu>
           </paper-material>
@@ -100,7 +100,7 @@
         if (!this.ctor) {
           const childTemplate = this.queryEffectiveChildren('template[item-template]');
           if (childTemplate) {
-            const items = this.$['item-list'];
+            const items = this.$.itemlist;
             this.templatize(childTemplate);
             items.templatize(childTemplate);
           }
