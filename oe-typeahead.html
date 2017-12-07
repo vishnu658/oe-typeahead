@@ -74,7 +74,7 @@
           <paper-material class="dropdown-content">
             <paper-menu id="menu">
                 <template itemlist id="item-list" is="dom-repeat" items="{{_suggestions}}" sort="sortData">
-                  <paper-item on-mouseover="_onMouseOver" on-tap="_select" data-item={{item}}>
+                  <paper-item on-mouseover="onMouseOver" on-tap="onItemSelected" data-item={{item}}>
                     <span>{{_getDisplayValue(item)}}</span>
                   </paper-item>
               </template>
@@ -274,14 +274,6 @@
             }
           }
         }
-        // else if (keycode != 9) { /* do NOT trigger a search on tab-in */
-
-        //     var suggestionsMenu = Polymer.dom(this.root).querySelector('paper-menu');
-        //     if (suggestionsMenu && typeof (suggestionsMenu) != 'undefined') {
-        //         suggestionsMenu.select(-1);
-        //     }
-        //     this._onInput(this.displayValue.trim());
-        // }
       },
       _onKeyDown: function (e) {
         var keycode = e.keyCode || e.which || e.key;
@@ -292,14 +284,13 @@
           e.stopPropagation();
         }
       },
-      _onMouseOver: function (e) {
-        var suggestionsMenu = Polymer.dom(this.root).querySelector('paper-menu');
-        if (suggestionsMenu && typeof (suggestionsMenu) != 'undefined') {
-          suggestionsMenu.select(e.model.index);
-          this.inputElement.focus();
-        }
+      /*When using custom templates, bind it to mouseover event of template component as on-mouseover="onMouseOver"*/
+      onMouseOver: function (e) {
+        this.$.menu.select(e.model.index);
+        this.inputElement.focus();
       },
-      _select: function (e) {
+      /*When using custom templates, bind it to tap event of template component as on-tap="onItemSelected"*/
+      onItemSelected: function (e) {
         this._setSelectedItem(e.model.item);
         this.fire('pt-item-confirmed', e.model.item);
         this.async(function () {
@@ -318,7 +309,6 @@
         }
 
         this.set('_suggestions', []);
-
       },
 
       /*Revisit getDisplayValue with iron-list template */
@@ -340,7 +330,6 @@
       _onInput: function (e) { // eslint-disable-line no-unused-vars
 
         var term = this.displayValue;
-
         if (term == '') {
           this.set('_suggestions', []);
           this._setSelectedItem(undefined);
@@ -363,16 +352,13 @@
         //Common Observer for dataurl as well as value property.
         //Do not rely on nVal or oVal to be value or dataurl.
 
-        //console.log('value changed ', nVal);
         if (!this.value || this.value.length === 0) {
-          //console.log('newvalue is null');
           this._setSelectedItem(undefined);
           return;
         }
 
         if (this.selectedItem && (this.selectedItem === this.value || this.value == this.selectedItem[
             this.valueproperty])) {
-          //console.log('input object is same as newvalue');
           // new value is same as what is already set
           return;
         }
@@ -389,7 +375,6 @@
 
           var re = new RegExp('VALUE_STRING', 'g');
           metaAjax.url = this.dataurl.replace(re, encodeURI(this.value));
-          //console.log(metaAjax.url);
           metaAjax.addEventListener('response', function (event) {
             var resp = event.detail.response;
             if(Array.isArray(resp)){

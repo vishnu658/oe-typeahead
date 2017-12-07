@@ -70,7 +70,7 @@
         <oe-typeahead label="Templated Country Items" displayproperty="description" valueproperty="code" searchurl="../data/country/SEARCH_STRING.json"
             dataurl="../data/country/VALUE_STRING.json">
           <template item-template>
-          <paper-item on-mouseover="_onMouseOver" on-tap="_select" data-item={{item}}>
+          <paper-item on-mouseover="onMouseOver" on-tap="onItemSelected" data-item={{item}} disabled=[[readOnly]]>
             <div class="layout horizontal flex">
             <iron-image style="width:36px; height:24px;" sizing="contain" src="https://raw.githubusercontent.com/emcrisostomo/flags/master/png/256/{{item.code}}.png"></iron-image>        
             <span class="layout flex centered">{{item.description}}</span>
