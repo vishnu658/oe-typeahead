@@ -374,7 +374,7 @@
           metaAjax.handleAs = 'json';
 
           var re = new RegExp('VALUE_STRING', 'g');
-          metaAjax.url = this.dataurl.replace(re, encodeURI(this.value));
+          metaAjax.url = this.dataurl.replace(re, encodeURIComponent(this.value));
           metaAjax.addEventListener('response', function (event) {
             var resp = event.detail.response;
             if(Array.isArray(resp)){
