@@ -323,7 +323,7 @@
         var re = new RegExp('SEARCH_STRING', 'g');
         var ret = undefined;
         if (this.searchurl) {
-          ret = this.searchurl.replace(re, encodeURI(searchString));
+          ret = this.searchurl.replace(re, encodeURIComponent(searchString));
         }
         return ret;
       },
